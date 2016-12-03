@@ -30,12 +30,6 @@ compileJava {
 
 
 //TODO: fix forge versioning so it can be changed from the properties file
-task testVersioning {
-doLast{
-ext.lforgeVersion = mcVersion + "-" + forgeVersion
-println ext.lforgeVersion
-}
-}
 minecraft {
     version = "12.18.2.2099"
     runDir = "run"
