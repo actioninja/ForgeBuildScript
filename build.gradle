@@ -29,7 +29,6 @@ compileJava {
 }
 
 
-//TODO: fix forge versioning so it can be changed from the properties file
 minecraft {
     version = "12.18.2.2099"
     runDir = "run"
