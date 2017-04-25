@@ -40,6 +40,7 @@ minecraft {
     version = config.forgeVersion
     runDir = "run"
     mappings = config.mappingVersion
+    replace '${version}', project.version
 }
 
 dependencies {
