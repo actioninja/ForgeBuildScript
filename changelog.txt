@@ -1,0 +1,4 @@
+------------------------------------------------------
+Version 1.0.0
+------------------------------------------------------
+Made this a template for how changelogs should be formatted

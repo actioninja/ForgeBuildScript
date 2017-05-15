@@ -9,8 +9,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 public class ExampleMod
 {
     public static final String MODID = "examplemod";
-    public static final String VERSION = "${version}";
-    
+    public static final String VERSION = "@VERSION@";
+
     @EventHandler
     public void init(FMLInitializationEvent event)
     {

@@ -1,50 +1,64 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
+        mavenLocal()
         maven { url = "http://files.minecraftforge.net/maven" }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            name = "gradle plugins"
+            url = "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.8"
+        //put any extra gradle dependencies you want here
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.matthewprenger.cursegradle'
 
-ext.configFile = file "build.properties"
-
-configFile.withReader {
-    def prop = new Properties()
-    prop.load(it)
-    project.ext.config = new ConfigSlurper().parse prop
-}
-	
 
 if (System.getenv().BUILD_NUMBER != null) {
-	ext.buildNumber = "${System.getenv().BUILD_NUMBER}"	
+	ext.buildNumber = "${System.getenv().BUILD_NUMBER}"
 } else {
-	ext.buildNumber = "custom"	
+	ext.buildNumber = "custom"
 }
 
-ext.modVersion = "${config.modVersion}.${ext.buildNumber}"
+version = "${mc_version}-${mod_version}.${ext.buildNumber}"
+group = mod_classpath
+archivesBaseName = archiveBaseName
 
-version = "${config.mcVersion}-${ext.modVersion}"
-group = config.modClasspath
-archivesBaseName = config.modArchiveBaseName
-
-sourceCompatibility = targetCompatibility = "1.8" 
+sourceCompatibility = targetCompatibility = "1.8"
 compileJava {
     sourceCompatibility = targetCompatibility = "1.8"
 }
 
 
 minecraft {
-    version = config.forgeVersion
+    version = mc_version + "-" + forge_version
     runDir = "run"
-    mappings = config.mappingVersion
-    replace '${version}', project.version
+    mappings = mapping_version
+    replace '@VERSION@', project.version
+    replaceIn "ExampleMod" //change this to whatever your main classname is
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven {
+        name = "CurseForge"
+        url = "https://minecraft.curseforge.com/api/maven/"
+    }
+    //Put any extra repositories for compile-time dependencies you want here
 }
 
 dependencies {
-
+    //Put compile-time dependencies here
 }
 
 processResources
@@ -54,11 +68,60 @@ processResources
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
+
         expand 'version':project.version, 'mcversion':project.minecraft.version
     }
-        
+
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+
+//This is some changelog wizardry I ripped off from TehNut.
+String getChangelogText() {
+    def changelogFile = new File('changelog.txt')
+    String str = ''
+    String separator = '---'
+    int lineCount = 0
+    boolean done = false
+    changelogFile.eachLine {
+        if (done || it == null) {
+            return
+        }
+        if (lineCount < 3) {
+            lineCount++
+            if (it.startsWith(separator)) {return}
+        }
+        if (!it.startsWith(separator)) {
+            str += "$it" + (lineCount < 3 ? ':\n\n' : '\n')
+            return
+        }
+        done = true // once we go past the first version block, parse no more
+    }
+    return str
+}
+
+def curseRelations = {
+    /* Put any relations of other projects to yours here
+       Possible relations are:
+       requiredLibrary for required libraries
+       embeddedLibrary for libraries that you've shaded into your jar
+       optionalLibrary for optional libraries
+       tool for compatible tools
+       incompatible for mods or libraries that are incompatible
+     */
+}
+
+curseforge {
+    if (System.getenv().CURSE_KEY != null) //I use my curse key set in a jenkins environment variable.
+        apiKey = System.getenv().CURSE_KEY //You also can use a global gradle.properties if you want
+
+    project {
+        id = "${curse_id}"
+        changelog = getChangelogText()
+        releaseType = 'beta' //alpha, beta, or release
+
+        relations curseRelations
     }
 }
